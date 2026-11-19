@@ -360,3 +360,16 @@ module "dashboard" {
   orders_queue_name = "${var.project_name}-${var.environment}-orders"
   orders_dlq_name   = "${var.project_name}-${var.environment}-orders-dlq"
 }
+
+
+# GitHub Actions OIDC Authentication
+module "github_oidc" {
+  source = "../../modules/github-oidc"
+
+  role_name = var.github_oidc_role_name
+
+  github_repository = var.github_repository
+  github_branch     = var.environment
+
+  tags = var.tags
+}
