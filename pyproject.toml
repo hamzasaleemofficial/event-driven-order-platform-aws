@@ -1,0 +1,25 @@
+[tool.pytest.ini_options]
+testpaths = [
+    "application/api/tests",
+    "application/worker/tests",
+    "tests",
+]
+python_files = ["test_*.py"]
+addopts = "-ra --import-mode=importlib"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "B",
+    "UP",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

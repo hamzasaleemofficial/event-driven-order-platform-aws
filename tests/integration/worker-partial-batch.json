@@ -1,0 +1,19 @@
+{
+  "Records": [
+    {
+      "messageId": "message-1",
+      "eventSource": "aws:sqs",
+      "body": "{\"order_id\":\"integration-test-order-001\",\"customer_id\":\"integration-test-customer\",\"items\":[{\"product_id\":\"product-123\",\"quantity\":2}]}"
+    },
+    {
+      "messageId": "message-2",
+      "eventSource": "aws:sqs",
+      "body": "{\"order_id\":\"invalid-order\",\"customer_id\":\"customer-123\",\"items\":[]}"
+    },
+    {
+      "messageId": "message-3",
+      "eventSource": "aws:sqs",
+      "body": "{\"order_id\":\"integration-partial-batch-003\",\"customer_id\":\"customer-456\",\"items\":[{\"product_id\":\"product-789\",\"quantity\":1}]}"
+    }
+  ]
+}
