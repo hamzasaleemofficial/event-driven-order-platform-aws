@@ -30,11 +30,13 @@ def make_event(quantity=2):
         ),
     }
 
+
 def make_get_event(order_id=ORDER_ID):
     return {
         "requestContext": {"http": {"method": "GET"}},
         "pathParameters": {"order_id": order_id},
     }
+
 
 def make_client_error(operation):
     return ClientError(
@@ -47,6 +49,7 @@ def make_client_error(operation):
         operation_name=operation,
     )
 
+
 def test_valid_order():
     order = {
         "customer_id": "customer-123",
@@ -55,16 +58,15 @@ def test_valid_order():
 
     assert validate_order(order) is None
 
+
 def test_invalid_quantity():
     order = {
         "customer_id": "customer-123",
         "items": [{"product_id": "laptop", "quantity": -2}],
     }
 
-    assert (
-        validate_order(order)
-        == "items[0].quantity must be a positive integer"
-    )
+    assert validate_order(order) == "items[0].quantity must be a positive integer"
+
 
 @pytest.mark.parametrize(
     "order, expected_error",
@@ -92,9 +94,9 @@ def test_invalid_quantity():
         ),
     ],
 )
-
 def test_invalid_orders(order, expected_error):
     assert validate_order(order) == expected_error
+
 
 def test_lambda_handler_accepts_valid_order():
     fake_table = Mock()
@@ -104,9 +106,7 @@ def test_lambda_handler_accepts_valid_order():
     operations = Mock()
 
     fake_table.put_item.side_effect = lambda **kwargs: operations.save(**kwargs)
-    fake_sqs.send_message.side_effect = (
-        lambda **kwargs: operations.enqueue(**kwargs)
-    )
+    fake_sqs.send_message.side_effect = lambda **kwargs: operations.enqueue(**kwargs)
 
     with (
         patch("handler.boto3.resource", return_value=fake_dynamodb),
@@ -137,9 +137,7 @@ def test_lambda_handler_accepts_valid_order():
 
     assert saved_order["order_id"] == response_body["order_id"]
     assert saved_order["customer_id"] == "customer-123"
-    assert saved_order["items"] == [
-        {"product_id": "laptop", "quantity": 2}
-    ]
+    assert saved_order["items"] == [{"product_id": "laptop", "quantity": 2}]
     assert saved_order["status"] == "RECEIVED"
     assert saved_order["event_status"] == "pending"
     assert saved_order["created_at"]
@@ -168,6 +166,7 @@ def test_lambda_handler_accepts_valid_order():
             MessageBody=sent_message["MessageBody"],
         ),
     ]
+
 
 def test_lambda_handler_accepts_decimal_price():
     """Decimal prices must work with both DynamoDB and SQS."""
@@ -219,6 +218,7 @@ def test_lambda_handler_accepts_decimal_price():
 
     assert message_body["items"][0]["price"] == "25.0"
 
+
 def test_lambda_handler_rejects_invalid_json():
     event = {
         "requestContext": {"http": {"method": "POST"}},
@@ -232,12 +232,11 @@ def test_lambda_handler_rejects_invalid_json():
         response = lambda_handler(event, None)
 
     assert response["statusCode"] == 400
-    assert json.loads(response["body"]) == {
-        "error": "Invalid JSON request body"
-    }
+    assert json.loads(response["body"]) == {"error": "Invalid JSON request body"}
 
     fake_client.assert_not_called()
     fake_resource.assert_not_called()
+
 
 @pytest.mark.parametrize(
     "environment",
@@ -252,7 +251,6 @@ def test_lambda_handler_rejects_invalid_json():
         },
     ],
 )
-
 def test_lambda_handler_missing_configuration(environment):
     with (
         patch.dict("os.environ", environment),
@@ -262,12 +260,11 @@ def test_lambda_handler_missing_configuration(environment):
         response = lambda_handler(make_event(), None)
 
     assert response["statusCode"] == 500
-    assert json.loads(response["body"]) == {
-        "error": "Internal server error"
-    }
+    assert json.loads(response["body"]) == {"error": "Internal server error"}
 
     fake_client.assert_not_called()
     fake_resource.assert_not_called()
+
 
 def test_lambda_handler_dynamodb_failure():
     fake_table = Mock()
@@ -296,6 +293,7 @@ def test_lambda_handler_dynamodb_failure():
 
     fake_table.put_item.assert_called_once()
     fake_client.assert_not_called()
+
 
 def test_lambda_handler_sqs_failure():
     fake_table = Mock()
@@ -333,16 +331,15 @@ def test_lambda_handler_sqs_failure():
 
     fake_table.delete_item.assert_not_called()
 
+
 def test_boolean_quantity_is_rejected():
     order = {
         "customer_id": "customer-123",
         "items": [{"product_id": "laptop", "quantity": True}],
     }
 
-    assert (
-        validate_order(order)
-        == "items[0].quantity must be a positive integer"
-    )
+    assert validate_order(order) == "items[0].quantity must be a positive integer"
+
 
 def test_multiple_valid_items():
     order = {
@@ -356,6 +353,7 @@ def test_multiple_valid_items():
 
     assert validate_order(order) is None
 
+
 def test_invalid_second_item():
     order = {
         "customer_id": "customer-123",
@@ -365,10 +363,8 @@ def test_invalid_second_item():
         ],
     }
 
-    assert (
-        validate_order(order)
-        == "items[1].quantity must be a positive integer"
-    )
+    assert validate_order(order) == "items[1].quantity must be a positive integer"
+
 
 def test_lambda_handler_rejects_invalid_order_without_aws_calls():
     with (
@@ -384,6 +380,7 @@ def test_lambda_handler_rejects_invalid_order_without_aws_calls():
 
     fake_client.assert_not_called()
     fake_resource.assert_not_called()
+
 
 def test_get_existing_order():
     order = {
@@ -419,6 +416,7 @@ def test_get_existing_order():
 
     fake_client.assert_not_called()
 
+
 def test_get_missing_order():
     fake_table = Mock()
     fake_table.get_item.return_value = {}
@@ -435,11 +433,11 @@ def test_get_missing_order():
     assert response["statusCode"] == 404
     assert json.loads(response["body"]) == {"error": "Order not found"}
 
+
 @pytest.mark.parametrize(
     "order_id",
     ["invalid-id", "", None],
 )
-
 def test_get_invalid_order_id(order_id):
     with patch("handler.boto3.resource") as fake_resource:
         response = lambda_handler(make_get_event(order_id), None)
@@ -447,6 +445,7 @@ def test_get_invalid_order_id(order_id):
     assert response["statusCode"] == 400
     assert json.loads(response["body"]) == {"error": "Invalid order_id"}
     fake_resource.assert_not_called()
+
 
 def test_get_missing_path_parameters():
     event = {
@@ -459,6 +458,7 @@ def test_get_missing_path_parameters():
     assert response["statusCode"] == 400
     fake_resource.assert_not_called()
 
+
 def test_get_missing_configuration():
     with (
         patch.dict("os.environ", {"ORDERS_TABLE_NAME": ""}),
@@ -467,11 +467,10 @@ def test_get_missing_configuration():
         response = lambda_handler(make_get_event(), None)
 
     assert response["statusCode"] == 500
-    assert json.loads(response["body"]) == {
-        "error": "Internal server error"
-    }
+    assert json.loads(response["body"]) == {"error": "Internal server error"}
 
     fake_resource.assert_not_called()
+
 
 def test_get_dynamodb_failure():
     fake_table = Mock()
@@ -491,6 +490,7 @@ def test_get_dynamodb_failure():
         "error": "Order service temporarily unavailable"
     }
 
+
 def test_unsupported_http_method():
     event = {
         "requestContext": {"http": {"method": "DELETE"}},
@@ -507,6 +507,7 @@ def test_unsupported_http_method():
 
     fake_resource.assert_not_called()
     fake_client.assert_not_called()
+
 
 def test_get_order_serializes_dynamodb_decimal():
     """DynamoDB Decimal quantities must be valid JSON numbers."""

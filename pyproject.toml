@@ -11,6 +11,11 @@ addopts = "-ra --import-mode=importlib"
 target-version = "py310"
 line-length = 88
 
+extend-exclude = [
+    "application/api/package",
+    "application/worker/package",
+]
+
 [tool.ruff.lint]
 select = [
     "E",

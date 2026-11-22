@@ -1,9 +1,10 @@
 import json
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 import pytest
 from botocore.exceptions import ClientError
-from decimal import Decimal
+
 from application.worker.handler import lambda_handler, process_order
 
 
@@ -57,9 +58,7 @@ def sns_error():
 def make_table(status="RECEIVED", event_status="pending"):
     table = Mock()
 
-    table.get_item.return_value = {
-        "Item": make_order(status, event_status)
-    }
+    table.get_item.return_value = {"Item": make_order(status, event_status)}
 
     return table
 
@@ -85,12 +84,10 @@ def test_legacy_order_is_created_and_completed():
     second_update = table.update_item.call_args_list[1]
 
     assert (
-        first_update.kwargs["ExpressionAttributeValues"][":processing"]
-        == "PROCESSING"
+        first_update.kwargs["ExpressionAttributeValues"][":processing"] == "PROCESSING"
     )
     assert (
-        second_update.kwargs["ExpressionAttributeValues"][":completed"]
-        == "COMPLETED"
+        second_update.kwargs["ExpressionAttributeValues"][":completed"] == "COMPLETED"
     )
 
     sns.publish.assert_called_once()
@@ -117,6 +114,7 @@ def test_api_created_order_is_processed():
     assert table.update_item.call_count == 3
     sns.publish.assert_called_once()
 
+
 def test_api_created_order_with_decimal_price_is_processed():
     """SQS string prices must match DynamoDB Decimal prices."""
     table = make_table()
@@ -141,6 +139,7 @@ def test_api_created_order_with_decimal_price_is_processed():
     assert table.update_item.call_count == 3
     sns.publish.assert_called_once()
 
+
 def test_mismatched_decimal_price_is_rejected():
     """Reject an SQS message whose price differs from DynamoDB."""
     table = make_table()
@@ -164,6 +163,7 @@ def test_mismatched_decimal_price_is_rejected():
     # Invalid messages must not modify the order or publish events.
     table.update_item.assert_not_called()
     sns.publish.assert_not_called()
+
 
 def test_processing_order_can_resume():
     table = make_table(status="PROCESSING")
@@ -264,9 +264,7 @@ def test_sns_failure_then_successful_retry():
 
     # Simulate DynamoDB's state after the first attempt.
     table.put_item.side_effect = conditional_check_error()
-    table.get_item.return_value = {
-        "Item": make_order(status="COMPLETED")
-    }
+    table.get_item.return_value = {"Item": make_order(status="COMPLETED")}
 
     process_order(make_record(), table, sns, "test-topic-arn")
 
@@ -278,10 +276,7 @@ def test_sns_failure_then_successful_retry():
 
     last_update = table.update_item.call_args.kwargs
 
-    assert (
-        last_update["ExpressionAttributeValues"][":published"]
-        == "published"
-    )
+    assert last_update["ExpressionAttributeValues"][":published"] == "published"
 
 
 @patch.dict(

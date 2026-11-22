@@ -6,14 +6,15 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_xray_sdk.core import patch
+from botocore.exceptions import BotoCoreError, ClientError
 
 # Enable X-Ray tracing for AWS SDK calls made through Boto3.
 patch(["botocore"])
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 def serialize_decimal(value):
     """Convert DynamoDB Decimal values into JSON-compatible numbers."""
@@ -23,6 +24,7 @@ def serialize_decimal(value):
         return float(value)
 
     raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
 
 def create_response(status_code, body):
     """Build an API Gateway-compatible HTTP response."""
@@ -200,11 +202,7 @@ def lambda_handler(event, context):
     """Route API Gateway HTTP API requests."""
     del context
 
-    method = (
-        event.get("requestContext", {})
-        .get("http", {})
-        .get("method")
-    )
+    method = event.get("requestContext", {}).get("http", {}).get("method")
 
     if method == "POST":
         return create_order(event)

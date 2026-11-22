@@ -2,11 +2,11 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 
 import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 from aws_xray_sdk.core import patch
-from decimal import Decimal, InvalidOperation
+from botocore.exceptions import BotoCoreError, ClientError
 
 # Enable X-Ray tracing for AWS SDK calls made through Boto3.
 patch(["botocore"])
@@ -22,10 +22,7 @@ def utc_now():
 
 def is_conditional_failure(error):
     """Check whether a DynamoDB conditional write failed."""
-    return (
-        error.response["Error"]["Code"]
-        == "ConditionalCheckFailedException"
-    )
+    return error.response["Error"]["Code"] == "ConditionalCheckFailedException"
 
 
 def process_order(record, table, sns, topic_arn):
@@ -44,7 +41,6 @@ def process_order(record, table, sns, topic_arn):
 
     if not isinstance(items, list) or not items:
         raise ValueError("Invalid items")
-
 
     # Normalize decimal prices from SQS before comparing with DynamoDB.
     for item in items:
@@ -112,9 +108,7 @@ def process_order(record, table, sns, topic_arn):
     if status == "RECEIVED":
         table.update_item(
             Key={"order_id": order_id},
-            UpdateExpression=(
-                "SET #status = :processing, updated_at = :updated_at"
-            ),
+            UpdateExpression=("SET #status = :processing, updated_at = :updated_at"),
             ConditionExpression="#status = :received",
             ExpressionAttributeNames={"#status": "status"},
             ExpressionAttributeValues={
@@ -129,9 +123,7 @@ def process_order(record, table, sns, topic_arn):
     if status == "PROCESSING":
         table.update_item(
             Key={"order_id": order_id},
-            UpdateExpression=(
-                "SET #status = :completed, updated_at = :updated_at"
-            ),
+            UpdateExpression=("SET #status = :completed, updated_at = :updated_at"),
             ConditionExpression="#status = :processing",
             ExpressionAttributeNames={"#status": "status"},
             ExpressionAttributeValues={
@@ -158,12 +150,8 @@ def process_order(record, table, sns, topic_arn):
 
     table.update_item(
         Key={"order_id": order_id},
-        UpdateExpression=(
-            "SET event_status = :published, updated_at = :updated_at"
-        ),
-        ConditionExpression=(
-            "#status = :completed AND event_status = :pending"
-        ),
+        UpdateExpression=("SET event_status = :published, updated_at = :updated_at"),
+        ConditionExpression=("#status = :completed AND event_status = :pending"),
         ExpressionAttributeNames={"#status": "status"},
         ExpressionAttributeValues={
             ":completed": "COMPLETED",
@@ -209,7 +197,7 @@ def lambda_handler(event, context):
             logger.exception(
                 "Failed to process SQS message",
                 extra={"message_id": message_id},
-            )   
+            )
 
             failures.append({"itemIdentifier": message_id})
 
