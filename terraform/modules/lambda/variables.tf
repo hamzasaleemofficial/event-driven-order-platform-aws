@@ -43,6 +43,11 @@ variable "event_source_mapping" {
   default     = {}
 }
 
+variable "role_permissions_boundary" {
+  description = "ARN of the IAM permissions boundary for the Lambda execution role"
+  type        = string
+}
+
 variable "tags" {
   description = "Common resource tags"
   type        = map(string)

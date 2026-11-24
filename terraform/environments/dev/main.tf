@@ -45,11 +45,13 @@ module "order_events_topic" {
 module "api_lambda" {
   source = "../../modules/lambda"
 
-  function_name = "event-driven-order-platform-dev-api"
+  function_name = var.api_lambda_function_name
   description   = "API Lambda for accepting customer orders"
 
-  handler = "handler.lambda_handler"
-  runtime = "python3.12"
+  role_permissions_boundary = module.iam_boundaries.api_lambda_boundary_arn
+
+  handler = var.handler
+  runtime = var.runtime
 
   source_path = "${path.root}/../../../application/api/package"
 
@@ -144,7 +146,7 @@ module "api_lambda" {
 module "api_gateway" {
   source = "../../modules/api-gateway"
 
-  api_name = "event-driven-order-platform-dev-api"
+  api_name = var.api_lambda_function_name
 
   lambda_invoke_arn    = module.api_lambda.invoke_arn
   lambda_function_name = module.api_lambda.function_name
@@ -155,11 +157,14 @@ module "api_gateway" {
 module "worker_lambda" {
   source = "../../modules/lambda"
 
-  function_name = "event-driven-order-platform-dev-worker"
+  function_name = var.worker_lambda_function_name
   description   = "Worker Lambda for processing orders from SQS"
 
-  handler = "handler.lambda_handler"
-  runtime = "python3.12"
+  role_permissions_boundary = module.iam_boundaries.worker_lambda_boundary_arn
+
+  handler = var.handler
+  runtime = var.runtime
+
 
   source_path = "${path.root}/../../../application/worker/package"
 
@@ -361,7 +366,6 @@ module "dashboard" {
   orders_dlq_name   = "${var.project_name}-${var.environment}-orders-dlq"
 }
 
-
 # GitHub Actions OIDC Authentication
 module "github_oidc" {
   source = "../../modules/github-oidc"
@@ -370,6 +374,83 @@ module "github_oidc" {
 
   github_repository = var.github_repository
   github_branch     = var.environment
+
+  tags = var.tags
+}
+
+# GitHub Actions Terraform IAM Permissions
+module "iam" {
+  source = "../../modules/iam"
+
+  github_actions_role_name = module.github_oidc.role_name
+
+  terraform_state_bucket = var.terraform_state_bucket
+  terraform_state_key    = var.terraform_state_key
+
+  lambda_execution_role_arns = [
+    module.api_lambda.role_arn,
+    module.worker_lambda.role_arn
+  ]
+
+  lambda_permissions_boundary_arns = [
+    module.iam_boundaries.api_lambda_boundary_arn,
+    module.iam_boundaries.worker_lambda_boundary_arn
+  ]
+
+  lambda_function_arns = [
+    module.api_lambda.function_arn,
+    module.worker_lambda.function_arn
+  ]
+
+  orders_table_arn = module.orders_table.table_arn
+
+  sqs_queue_arns = [
+    module.orders_queue.queue_arn,
+    module.orders_queue.dlq_arn
+  ]
+
+  sns_topic_arns = [
+    module.order_events_topic.topic_arn,
+    module.monitoring_alerts_topic.topic_arn
+  ]
+
+  kms_key_arn = module.kms.key_arn
+
+  api_gateway_arn = module.api_gateway.api_arn
+
+  cloudwatch_log_group_arns = [
+    module.api_gateway.log_group_arn,
+    module.api_lambda.log_group_arn,
+    module.worker_lambda.log_group_arn
+  ]
+
+  cloudwatch_alarm_arns = [
+    module.api_gateway_monitoring.api_gateway_5xx_alarm_arn,
+    module.api_lambda_monitoring.alarm_arn,
+    module.worker_lambda_monitoring.alarm_arn,
+    module.orders_dlq_monitoring.sqs_dlq_alarm_arn
+  ]
+
+  cloudwatch_dashboard_arn = module.dashboard.dashboard_arn
+
+  github_actions_role_arn = module.github_oidc.role_arn
+
+  tags = var.tags
+}
+
+
+module "iam_boundaries" {
+  source = "../../modules/iam-boundaries"
+
+  github_actions_role_name = module.github_oidc.role_name
+
+  orders_queue_arn       = module.orders_queue.queue_arn
+  orders_table_arn       = module.orders_table.table_arn
+  order_events_topic_arn = module.order_events_topic.topic_arn
+  kms_key_arn            = module.kms.key_arn
+
+  api_lambda_function_name    = var.api_lambda_function_name
+  worker_lambda_function_name = var.worker_lambda_function_name
 
   tags = var.tags
 }

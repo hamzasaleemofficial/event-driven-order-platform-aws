@@ -41,3 +41,7 @@ resource "aws_lambda_permission" "api_gateway" {
 
   source_arn = "${module.api_gateway.api_execution_arn}/*/*/orders*"
 }
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}

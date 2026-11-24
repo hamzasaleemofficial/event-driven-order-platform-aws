@@ -8,14 +8,25 @@ module "lambda" {
   handler = var.handler
   runtime = var.runtime
 
-  source_path = var.source_path
+  source_path = [
+    {
+      path = var.source_path
+
+      patterns = [
+        "!.*\\.pyc$",
+        "!.*\\.pyo$",
+        "!.*__pycache__.*"
+      ]
+    }
+  ]
 
   memory_size = 256
   timeout     = 30
 
   environment_variables = var.environment_variables
 
-  create_role = true
+  create_role               = true
+  role_permissions_boundary = var.role_permissions_boundary
 
   attach_policy_statements = true
   policy_statements        = var.policy_statements
