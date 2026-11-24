@@ -42,7 +42,7 @@ jobs:
   terraform-plan:
     name: Terraform Plan
     needs: terraform-ci
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/dev' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
 
     permissions:
