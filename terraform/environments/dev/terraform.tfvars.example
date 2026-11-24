@@ -1,0 +1,22 @@
+
+github_oidc_role_name = "dev-event-driven-order-platform"
+
+github_repository = "hamzasaleemofficial@60598687/event-driven-order-platform-aws@1464521227"
+
+terraform_state_bucket = "event-driven-order-platform"
+
+terraform_state_key = "dev/terraform.tfstate"
+
+api_lambda_function_name = "event-driven-order-platform-dev-api"
+
+worker_lambda_function_name = "event-driven-order-platform-dev-worker"
+
+handler = "handler.lambda_handler"
+
+runtime = "python3.12"
+
+tags = {
+  Project     = "event-driven-order-platform"
+  Environment = "dev"
+  ManagedBy   = "Terraform"
+}
