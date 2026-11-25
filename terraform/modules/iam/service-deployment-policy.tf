@@ -1,3 +1,5 @@
+data "aws_region" "current" {}
+
 data "aws_iam_policy_document" "service_deployment" {
   statement {
     sid = "ReadLambdaFunctions"
@@ -252,6 +254,18 @@ data "aws_iam_policy_document" "service_deployment" {
     ]
 
     resources = ["*"]
+  }
+
+  statement {
+    sid = "ReadLambdaEventSourceMappingTags"
+
+    actions = [
+      "lambda:ListTags"
+    ]
+
+    resources = [
+      "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:event-source-mapping:*"
+    ]
   }
 
 }
