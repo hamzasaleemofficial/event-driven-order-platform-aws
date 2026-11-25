@@ -5,6 +5,8 @@ data "aws_iam_policy_document" "service_deployment" {
     actions = [
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
+      "lambda:GetFunctionCodeSigningConfig",
+      "lambda:GetFunctionConcurrency",
       "lambda:GetPolicy",
       "lambda:ListTags",
       "lambda:ListVersionsByFunction"
@@ -225,11 +227,19 @@ data "aws_iam_policy_document" "service_deployment" {
       "s3:GetBucketTagging",
       "s3:GetBucketAcl",
       "s3:GetBucketPolicy",
-      "s3:GetBucketPolicyStatus"
+      "s3:GetBucketPolicyStatus",
+      "s3:GetBucketCORS",
+      "s3:GetBucketWebsite",
+      "s3:GetBucketLogging",
+      "s3:GetBucketRequestPayment",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetReplicationConfiguration",
+      "s3:GetAccelerateConfiguration",
+      "s3:GetBucketObjectLockConfiguration"
     ]
 
     resources = [
-      "arn:aws:s3:::${var.terraform_state_bucket}"
+      "arn:${data.aws_partition.current.partition}:s3:::${var.terraform_state_bucket}"
     ]
   }
 
