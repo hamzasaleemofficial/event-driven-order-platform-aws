@@ -146,7 +146,8 @@ data "aws_iam_policy_document" "terraform_deployment" {
       [
         aws_iam_policy.terraform_backend.arn,
         "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.github_actions_role_name}-terraform-deployment",
-        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.github_actions_role_name}-terraform-service-deployment"
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:policy/${var.github_actions_role_name}-terraform-service-deployment",
+        "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSXRayDaemonWriteAccess"
       ]
     )
   }

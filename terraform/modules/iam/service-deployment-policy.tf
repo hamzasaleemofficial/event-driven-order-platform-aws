@@ -82,6 +82,7 @@ data "aws_iam_policy_document" "service_deployment" {
 
     actions = [
       "sns:GetTopicAttributes",
+      "sns:GetSubscriptionAttributes",
       "sns:ListTagsForResource",
       "sns:ListSubscriptionsByTopic"
     ]
@@ -215,6 +216,7 @@ data "aws_iam_policy_document" "service_deployment" {
     sid = "ReadTerraformBackendBucket"
 
     actions = [
+      "s3:ListBucket",
       "s3:GetBucketLocation",
       "s3:GetBucketVersioning",
       "s3:GetEncryptionConfiguration",
@@ -242,17 +244,6 @@ data "aws_iam_policy_document" "service_deployment" {
     resources = ["*"]
   }
 
-  statement {
-    sid = "ReadSNSSubscriptions"
-
-    actions = [
-      "sns:GetSubscriptionAttributes"
-    ]
-
-    resources = [
-      for topic_arn in var.sns_topic_arns : "${topic_arn}:*"
-    ]
-  }
 }
 
 resource "aws_iam_policy" "service_deployment" {
