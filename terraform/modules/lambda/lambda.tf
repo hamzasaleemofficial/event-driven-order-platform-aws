@@ -28,6 +28,9 @@ module "lambda" {
   create_role               = true
   role_permissions_boundary = var.role_permissions_boundary
 
+  recreate_missing_package     = false
+  trigger_on_package_timestamp = false
+
   attach_policy_statements = true
   policy_statements        = var.policy_statements
 
