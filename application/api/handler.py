@@ -211,3 +211,5 @@ def lambda_handler(event, context):
         return get_order(event)
 
     return create_response(405, {"error": "Method not allowed"})
+
+# CI/CD deployment validation.
